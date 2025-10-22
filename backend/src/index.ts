@@ -5,6 +5,11 @@ import debateRoutes from './routes/debate';
 
 dotenv.config();
 
+console.log('🔧 Environment variables loaded:');
+console.log('📋 PORT:', process.env.PORT || 3001);
+console.log('🔑 ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
+console.log('🔑 API Key starts with sk-:', process.env.ANTHROPIC_API_KEY?.startsWith('sk-') || false);
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
