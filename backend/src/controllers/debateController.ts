@@ -60,8 +60,10 @@ Remember: Be respectful, logical, and evidence-based. Keep it under 200 words.`;
         },
       ],
     });
-    
+
     console.log('✅ API call successful');
+    console.log('🔍 ACTUAL MODEL USED BY API:', message.model);
+    console.log('🔍 Response ID:', message.id);
 
     const response = message.content[0].type === 'text' ? message.content[0].text : '';
 
@@ -137,8 +139,10 @@ Debate Guidelines:
       system: systemPrompt,
       messages,
     });
-    
+
     console.log('✅ API call successful for debate response');
+    console.log('🔍 ACTUAL MODEL USED BY API:', message.model);
+    console.log('🔍 Response ID:', message.id);
 
     const response = message.content[0].type === 'text' ? message.content[0].text : '';
 
