@@ -11,7 +11,7 @@ console.log('🔑 ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
 console.log('🔑 API Key starts with sk-:', process.env.ANTHROPIC_API_KEY?.startsWith('sk-') || false);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors());
@@ -26,9 +26,10 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 API endpoints available at http://localhost:${PORT}/api/debate`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+  console.log(`📝 API endpoints available at http://0.0.0.0:${PORT}/api/debate`);
+  console.log(`📱 Mobile access: http://192.168.1.39:${PORT}/api/debate`);
 });
 
 export default app;

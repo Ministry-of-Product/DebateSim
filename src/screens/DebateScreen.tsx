@@ -66,11 +66,14 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [session.messages]);
 
   const generateAIOpening = async () => {
+    console.log('🎯 Starting AI opening generation...');
     setIsLoading(true);
     let responseToSpeak = '';
 
     try {
+      console.log('📞 Calling generateOpeningStatement API...');
       const response = await generateOpeningStatement(topic, aiSide);
+      console.log('✅ Received AI response:', response.substring(0, 100) + '...');
       responseToSpeak = response;
 
       const aiMessage: DebateMessage = {
@@ -86,9 +89,15 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
         messages: [...prev.messages, aiMessage],
         currentTurn: 'user',
       }));
-    } catch (error) {
-      console.error('Error generating AI opening:', error);
-      Alert.alert('Error', 'Failed to generate AI opening statement. Using fallback.');
+    } catch (error: any) {
+      console.error('❌ Error generating AI opening:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      
+      // Show error after a brief delay so user can see the loading spinner
+      setTimeout(() => {
+        const errorMessage = error.message || 'Failed to generate AI opening statement';
+        Alert.alert('Error', `${errorMessage}. Using fallback.`);
+      }, 1000);
 
       // Fallback opening
       const fallbackMessage = `I'm here to debate the ${aiSide} side of: "${topic}". Let me start by presenting my opening argument.`;
@@ -164,9 +173,10 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
         messages: [...prev.messages, aiMessage],
         currentTurn: 'user',
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating AI response:', error);
-      Alert.alert('Error', 'Failed to generate AI response. Please try again.');
+      const errorMessage = error.message || 'Failed to generate AI response';
+      Alert.alert('Error', `${errorMessage}. Please try again.`);
 
       // Revert turn back to user
       setSession((prev) => ({
