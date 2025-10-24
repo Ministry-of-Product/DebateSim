@@ -53,7 +53,15 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Generate AI opening statement on mount
   useEffect(() => {
-    generateAIOpening();
+    const initializeDebate = async () => {
+      try {
+        await generateAIOpening();
+      } catch (error) {
+        console.error('❌ Error initializing debate:', error);
+      }
+    };
+    
+    initializeDebate();
   }, []);
 
   // Scroll to bottom when new messages arrive
@@ -66,13 +74,37 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [session.messages]);
 
   const generateAIOpening = async () => {
+    console.log('🎯 Starting AI opening generation...');
+    console.log('📋 Topic:', topic);
+    console.log('📋 AI Side:', aiSide);
+    
+    // Step 1: Show thinking state immediately
     setIsLoading(true);
-    let responseToSpeak = '';
+    
+    // Step 2: Add a "thinking" message to show the AI is working
+    const thinkingMessage: DebateMessage = {
+      id: 'thinking-' + Date.now(),
+      sender: 'ai',
+      content: '🤔 Thinking about my opening statement...',
+      timestamp: new Date(),
+      wordCount: 0,
+    };
+    
+    setSession((prev) => ({
+      ...prev,
+      messages: [...prev.messages, thinkingMessage],
+      currentTurn: 'ai', // Keep it as AI's turn while thinking
+    }));
 
     try {
+      console.log('📞 Calling generateOpeningStatement API...');
+      console.log('📋 Frontend - Topic:', topic);
+      console.log('📋 Frontend - AI Side:', aiSide);
       const response = await generateOpeningStatement(topic, aiSide);
-      responseToSpeak = response;
+      console.log('✅ Received AI response:', response.substring(0, 100) + '...');
+      console.log('✅ Full AI response length:', response.length);
 
+      // Step 3: Replace thinking message with actual response
       const aiMessage: DebateMessage = {
         id: Date.now().toString(),
         sender: 'ai',
@@ -83,18 +115,26 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
 
       setSession((prev) => ({
         ...prev,
-        messages: [...prev.messages, aiMessage],
+        messages: prev.messages.map(msg => 
+          msg.id === thinkingMessage.id ? aiMessage : msg
+        ),
         currentTurn: 'user',
       }));
+
+      // Step 4: Speak the response
+      try {
+        await speakText(response);
+      } catch (speakError) {
+        console.log('Error speaking text:', speakError);
+      }
+
     } catch (error) {
-      console.error('Error generating AI opening:', error);
-      Alert.alert('Error', 'Failed to generate AI opening statement. Using fallback.');
-
-      // Fallback opening
+      console.log('Error generating AI opening:', error);
+      
+      // Step 3 (fallback): Replace thinking message with fallback
       const fallbackMessage = `I'm here to debate the ${aiSide} side of: "${topic}". Let me start by presenting my opening argument.`;
-      responseToSpeak = fallbackMessage;
-
-      const aiMessage: DebateMessage = {
+      
+      const fallbackAiMessage: DebateMessage = {
         id: Date.now().toString(),
         sender: 'ai',
         content: fallbackMessage,
@@ -104,16 +144,24 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
 
       setSession((prev) => ({
         ...prev,
-        messages: [...prev.messages, aiMessage],
+        messages: prev.messages.map(msg => 
+          msg.id === thinkingMessage.id ? fallbackAiMessage : msg
+        ),
         currentTurn: 'user',
       }));
-    } finally {
-      setIsLoading(false);
-    }
 
-    // Speak AI response AFTER loading spinner is hidden
-    if (responseToSpeak) {
-      await speakText(responseToSpeak);
+      // Show error alert
+      Alert.alert('Error', 'Failed to generate AI opening statement. Using fallback.');
+
+      // Speak fallback
+      try {
+        await speakText(fallbackMessage);
+      } catch (speakError) {
+        console.log('Error speaking fallback text:', speakError);
+      }
+    } finally {
+      // Step 5: Always clear loading state
+      setIsLoading(false);
     }
   };
 
@@ -128,7 +176,7 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
       wordCount,
     };
 
-    // Add user message
+    // Step 1: Add user message and show thinking state
     setSession((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
@@ -138,19 +186,39 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
     setCurrentInput('');
     setIsLoading(true);
 
-    let responseToSpeak = '';
+    // Step 2: Add thinking message
+    const thinkingMessage: DebateMessage = {
+      id: 'thinking-' + Date.now(),
+      sender: 'ai',
+      content: '🤔 Thinking about my response...',
+      timestamp: new Date(),
+      wordCount: 0,
+    };
+
+    setSession((prev) => ({
+      ...prev,
+      messages: [...prev.messages, thinkingMessage],
+    }));
 
     try {
-      // Generate AI response
+      // Step 3: Generate AI response
+      console.log('📞 Calling generateAIResponse API...');
+      console.log('📋 Frontend - Topic:', topic);
+      console.log('📋 Frontend - AI Side:', aiSide);
+      console.log('📋 Frontend - User Message:', userMessage.content);
+      console.log('📋 Frontend - Conversation History Length:', [...session.messages, userMessage].length);
+      
       const response = await generateAIResponse({
         topic,
         aiSide,
         conversationHistory: [...session.messages, userMessage],
-        userMessage: currentInput.trim(),
+        userMessage: userMessage.content,
       });
+      
+      console.log('✅ Received AI response:', response.substring(0, 100) + '...');
+      console.log('✅ Full AI response length:', response.length);
 
-      responseToSpeak = response;
-
+      // Step 4: Replace thinking message with actual response
       const aiMessage: DebateMessage = {
         id: Date.now().toString(),
         sender: 'ai',
@@ -161,25 +229,43 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
 
       setSession((prev) => ({
         ...prev,
-        messages: [...prev.messages, aiMessage],
+        messages: prev.messages.map(msg => 
+          msg.id === thinkingMessage.id ? aiMessage : msg
+        ),
         currentTurn: 'user',
       }));
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-      Alert.alert('Error', 'Failed to generate AI response. Please try again.');
 
-      // Revert turn back to user
+      // Step 5: Speak the response
+      try {
+        await speakText(response);
+      } catch (speakError) {
+        console.log('Error speaking text:', speakError);
+      }
+
+    } catch (error) {
+      console.log('Error generating AI response:', error);
+      
+      // Step 4 (fallback): Replace thinking message with error message
+      const errorAiMessage: DebateMessage = {
+        id: Date.now().toString(),
+        sender: 'ai',
+        content: 'I apologize, but I encountered an error generating my response. Please try again.',
+        timestamp: new Date(),
+        wordCount: 0,
+      };
+
       setSession((prev) => ({
         ...prev,
+        messages: prev.messages.map(msg => 
+          msg.id === thinkingMessage.id ? errorAiMessage : msg
+        ),
         currentTurn: 'user',
       }));
-    } finally {
-      setIsLoading(false);
-    }
 
-    // Speak AI response AFTER loading spinner is hidden
-    if (responseToSpeak) {
-      await speakText(responseToSpeak);
+      Alert.alert('Error', 'Failed to generate AI response. Please try again.');
+    } finally {
+      // Step 6: Always clear loading state
+      setIsLoading(false);
     }
   };
 
