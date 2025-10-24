@@ -7,9 +7,9 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.39:300
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 console.log('🔧 EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
 
-// Configure axios with 5 second timeout for AI responses
+// Configure axios with 30 second timeout for AI responses
 const apiClient = axios.create({
-  timeout: 5000, // 5 seconds timeout for AI responses
+  timeout: 30000, // 30 seconds timeout for AI responses
   headers: {
     'Content-Type': 'application/json',
   },
@@ -50,6 +50,9 @@ export const generateAIResponse = async (
     console.log('📋 Response headers:', response.headers);
     console.log('📋 Response data:', response.data);
     console.log('📋 AI Response text:', response.data.response);
+    console.log('📋 AI Response length:', response.data.response?.length || 0);
+    console.log('📋 Response data type:', typeof response.data);
+    console.log('📋 Response data keys:', Object.keys(response.data || {}));
     return response.data.response;
   } catch (error) {
     console.log('❌ Error generating AI response:', error);
@@ -96,6 +99,9 @@ export const generateOpeningStatement = async (
     console.log('📋 Response headers:', response.headers);
     console.log('📋 Response data:', response.data);
     console.log('📋 AI Response text:', response.data.response);
+    console.log('📋 AI Response length:', response.data.response?.length || 0);
+    console.log('📋 Response data type:', typeof response.data);
+    console.log('📋 Response data keys:', Object.keys(response.data || {}));
     return response.data.response;
   } catch (error) {
     console.log('❌ Error generating opening statement:', error);

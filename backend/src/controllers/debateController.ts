@@ -68,7 +68,17 @@ Remember: Be respectful, logical, and evidence-based. Keep it under 200 words.`;
     const response = message.content[0].type === 'text' ? message.content[0].text : '';
 
     console.log('📤 Sending response to client');
-    res.json({ response });
+    console.log('📋 Response length:', response.length);
+    console.log('📋 Response preview:', response.substring(0, 100) + '...');
+    console.log('📋 Full response object:', { response });
+    
+    try {
+      res.json({ response });
+      console.log('✅ Response sent successfully to client');
+    } catch (sendError) {
+      console.error('❌ Error sending response to client:', sendError);
+      throw sendError;
+    }
   } catch (error) {
     console.error('❌ Error generating opening statement:');
     console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
@@ -147,7 +157,17 @@ Debate Guidelines:
     const response = message.content[0].type === 'text' ? message.content[0].text : '';
 
     console.log('📤 Sending debate response to client');
-    res.json({ response });
+    console.log('📋 Response length:', response.length);
+    console.log('📋 Response preview:', response.substring(0, 100) + '...');
+    console.log('📋 Full response object:', { response });
+    
+    try {
+      res.json({ response });
+      console.log('✅ Debate response sent successfully to client');
+    } catch (sendError) {
+      console.error('❌ Error sending debate response to client:', sendError);
+      throw sendError;
+    }
   } catch (error) {
     console.error('❌ Error generating debate response:');
     console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
