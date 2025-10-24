@@ -13,10 +13,16 @@ const ensureDirectoryExists = async () => {
 
 export const saveTranscript = async (session: DebateSession): Promise<string> => {
   try {
+    console.log('💾 Starting transcript save process...');
+    console.log('📋 Session ID:', session.id);
+    console.log('📋 Messages count:', session.messages.length);
+    
     await ensureDirectoryExists();
+    console.log('✅ Directory ensured');
 
     const fileName = `transcript_${session.id}_${Date.now()}.json`;
     const filePath = `${TRANSCRIPTS_DIR}${fileName}`;
+    console.log('📋 File path:', filePath);
 
     const transcriptData = {
       ...session,
@@ -28,15 +34,20 @@ export const saveTranscript = async (session: DebateSession): Promise<string> =>
       endTime: session.endTime?.toISOString(),
     };
 
+    console.log('📋 Transcript data prepared, writing to file...');
     await FileSystem.writeAsStringAsync(
       filePath,
       JSON.stringify(transcriptData, null, 2)
     );
+    console.log('✅ File written successfully');
 
     return filePath;
   } catch (error) {
-    console.error('Error saving transcript:', error);
-    throw new Error('Failed to save transcript');
+    console.error('❌ Error saving transcript:', error);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error message:', error?.message || 'Unknown error');
+    console.error('❌ Error stack:', error?.stack || 'No stack trace');
+    throw new Error(`Failed to save transcript: ${error?.message || 'Unknown error'}`);
   }
 };
 
