@@ -35,13 +35,13 @@ export const generateOpeningStatement = async (req: Request, res: Response) => {
 
     const systemPrompt = `You are a skilled debater participating in a formal debate. You are arguing ${aiSide} the following topic: "${topic}".
 
-Your task is to provide a concise opening statement (under 200 words) that:
+Your task is to provide a concise opening statement (under 280 characters, like a tweet) that:
 1. Clearly states your position
-2. Presents 2-3 key arguments
+2. Presents 1-2 key arguments
 3. Is engaging and persuasive
 4. Sets the tone for the debate
 
-Remember: Be respectful, logical, and evidence-based. Keep it under 200 words.`;
+Remember: Be respectful, logical, and evidence-based. Keep it under 280 characters.`;
 
     console.log('🤖 Creating Anthropic client...');
     const anthropic = getAnthropicClient();
@@ -110,7 +110,7 @@ Your task is to:
 2. Present counter-arguments or rebuttals
 3. Support your position with logic and reasoning
 4. Maintain a respectful but firm tone
-5. Keep your response under 200 words
+5. Keep your response under 280 characters (like a tweet)
 
 Debate Guidelines:
 - Address the opponent's specific arguments

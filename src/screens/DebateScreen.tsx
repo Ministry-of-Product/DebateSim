@@ -288,12 +288,19 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
             };
 
             try {
-              await saveTranscript(endedSession);
+              console.log('💾 Saving transcript...');
+              console.log('📋 Session data:', endedSession);
+              const filePath = await saveTranscript(endedSession);
+              console.log('✅ Transcript saved to:', filePath);
               Alert.alert('Success', 'Debate transcript saved!');
+              console.log('🧭 Navigating to Transcript screen...');
               navigation.navigate('Transcript', { session: endedSession });
             } catch (error) {
-              console.error('Error saving transcript:', error);
+              console.error('❌ Error saving transcript:', error);
+              console.error('❌ Error type:', typeof error);
+              console.error('❌ Error message:', error?.message || 'Unknown error');
               Alert.alert('Error', 'Failed to save transcript, but you can still review it.');
+              console.log('🧭 Navigating to Transcript screen despite error...');
               navigation.navigate('Transcript', { session: endedSession });
             }
           },
