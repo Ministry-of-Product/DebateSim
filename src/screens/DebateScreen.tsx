@@ -100,9 +100,15 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log('📞 Calling generateOpeningStatement API...');
       console.log('📋 Frontend - Topic:', topic);
       console.log('📋 Frontend - AI Side:', aiSide);
+      console.log('📋 Frontend - About to call API...');
+      
       const response = await generateOpeningStatement(topic, aiSide);
-      console.log('✅ Received AI response:', response.substring(0, 100) + '...');
-      console.log('✅ Full AI response length:', response.length);
+      
+      console.log('✅ Received AI response from API call');
+      console.log('✅ Response type:', typeof response);
+      console.log('✅ Response value:', response);
+      console.log('✅ Response length:', response?.length || 0);
+      console.log('✅ Response preview:', response?.substring(0, 100) + '...');
 
       // Step 3: Replace thinking message with actual response
       const aiMessage: DebateMessage = {
@@ -129,7 +135,11 @@ export const DebateScreen: React.FC<Props> = ({ navigation, route }) => {
       }
 
     } catch (error) {
-      console.log('Error generating AI opening:', error);
+      console.log('❌ Error generating AI opening:', error);
+      console.log('❌ Error type:', typeof error);
+      console.log('❌ Error message:', error?.message || 'No message');
+      console.log('❌ Error stack:', error?.stack || 'No stack');
+      console.log('❌ Full error object:', JSON.stringify(error, null, 2));
       
       // Step 3 (fallback): Replace thinking message with fallback
       const fallbackMessage = `I'm here to debate the ${aiSide} side of: "${topic}". Let me start by presenting my opening argument.`;

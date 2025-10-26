@@ -2,7 +2,7 @@ import axios from 'axios';
 import { DebateMessage, DebateSide } from '../types';
 
 // TODO: Update this with your backend URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.39:3001';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.45:3001';
 
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 console.log('🔧 EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
@@ -53,11 +53,27 @@ export const generateAIResponse = async (
     console.log('📋 AI Response length:', response.data.response?.length || 0);
     console.log('📋 Response data type:', typeof response.data);
     console.log('📋 Response data keys:', Object.keys(response.data || {}));
+    
+    // Additional debugging
+    if (!response.data) {
+      console.log('❌ ERROR: response.data is undefined');
+      throw new Error('No response data received from server');
+    }
+    if (!response.data.response) {
+      console.log('❌ ERROR: response.data.response is undefined');
+      console.log('❌ Available keys in response.data:', Object.keys(response.data));
+      throw new Error('No response field in server response');
+    }
+    
+    console.log('✅ Successfully extracted response:', response.data.response);
     return response.data.response;
   } catch (error) {
     console.log('❌ Error generating AI response:', error);
     console.log('❌ Error type:', typeof error);
     console.log('❌ Error constructor:', error?.constructor?.name);
+    console.log('❌ Error message:', error?.message || 'No message');
+    console.log('❌ Error stack:', error?.stack || 'No stack');
+    console.log('❌ Full error object:', JSON.stringify(error, null, 2));
     
     if (error && typeof error === 'object' && 'code' in error) {
       console.log('❌ Error code:', error.code);
@@ -75,6 +91,13 @@ export const generateAIResponse = async (
       throw new Error(`Server error: ${error.response.status}`);
     }
     
+    // More specific error handling
+    if (error && typeof error === 'object' && 'message' in error) {
+      console.log('❌ Throwing specific error:', error.message);
+      throw new Error(error.message);
+    }
+    
+    console.log('❌ Throwing generic network error');
     throw new Error('Network error occurred');
   }
 };
@@ -102,11 +125,27 @@ export const generateOpeningStatement = async (
     console.log('📋 AI Response length:', response.data.response?.length || 0);
     console.log('📋 Response data type:', typeof response.data);
     console.log('📋 Response data keys:', Object.keys(response.data || {}));
+    
+    // Additional debugging
+    if (!response.data) {
+      console.log('❌ ERROR: response.data is undefined');
+      throw new Error('No response data received from server');
+    }
+    if (!response.data.response) {
+      console.log('❌ ERROR: response.data.response is undefined');
+      console.log('❌ Available keys in response.data:', Object.keys(response.data));
+      throw new Error('No response field in server response');
+    }
+    
+    console.log('✅ Successfully extracted response:', response.data.response);
     return response.data.response;
   } catch (error) {
     console.log('❌ Error generating opening statement:', error);
     console.log('❌ Error type:', typeof error);
     console.log('❌ Error constructor:', error?.constructor?.name);
+    console.log('❌ Error message:', error?.message || 'No message');
+    console.log('❌ Error stack:', error?.stack || 'No stack');
+    console.log('❌ Full error object:', JSON.stringify(error, null, 2));
 
     if (error && typeof error === 'object' && 'code' in error) {
       console.log('❌ Error code:', error.code);
@@ -124,6 +163,13 @@ export const generateOpeningStatement = async (
       throw new Error(`Server error: ${error.response.status}`);
     }
     
+    // More specific error handling
+    if (error && typeof error === 'object' && 'message' in error) {
+      console.log('❌ Throwing specific error:', error.message);
+      throw new Error(error.message);
+    }
+    
+    console.log('❌ Throwing generic network error');
     throw new Error('Network error occurred');
   }
 };

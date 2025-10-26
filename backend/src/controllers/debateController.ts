@@ -1,17 +1,8 @@
 import { Request, Response } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateAIResponse, getAIConfig, AIMessage } from '../services/aiService';
 
-const MODEL = 'claude-3-7-sonnet-20250219';
-const MAX_TOKENS = 300; // Keep responses concise (roughly 200 words)
-
-console.log('🔧 MODEL CONSTANT SET TO:', MODEL);
-
-// Initialize Anthropic client with API key
-const getAnthropicClient = () => {
-  return new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
-};
+const AI_CONFIG = getAIConfig();
+console.log('🔧 AI CONFIG LOADED:', AI_CONFIG);
 
 interface ConversationMessage {
   role: 'user' | 'assistant';
@@ -22,7 +13,7 @@ export const generateOpeningStatement = async (req: Request, res: Response) => {
   try {
     console.log('🎯 generateOpeningStatement called');
     console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
-    console.log('🔧 CURRENT MODEL BEING USED:', MODEL);
+    console.log('🔧 CURRENT AI CONFIG:', AI_CONFIG);
     
     const { topic, aiSide } = req.body;
 
@@ -43,37 +34,31 @@ Your task is to provide a concise opening statement (under 280 characters, like 
 
 Remember: Be respectful, logical, and evidence-based. Keep it under 280 characters.`;
 
-    console.log('🤖 Creating Anthropic client...');
-    const anthropic = getAnthropicClient();
-    console.log('📋 Using model:', MODEL);
-    console.log('🔑 API Key present:', !!process.env.ANTHROPIC_API_KEY);
-    
-    console.log('🚀 Making API call to Anthropic...');
-    const message = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: 'Please provide your opening statement.',
-        },
-      ],
-    });
+    const messages: AIMessage[] = [
+      {
+        role: 'user',
+        content: `I need an opening statement for a debate on: "${topic}". I am arguing ${aiSide} this topic. Please provide a compelling opening statement that clearly states my position and presents strong arguments.`,
+      },
+    ];
 
-    console.log('✅ API call successful');
-    console.log('🔍 ACTUAL MODEL USED BY API:', message.model);
-    console.log('🔍 Response ID:', message.id);
+    console.log('🚀 Making AI API call...');
+    console.log('📋 System prompt length:', systemPrompt.length);
+    console.log('📋 Messages count:', messages.length);
 
-    const response = message.content[0].type === 'text' ? message.content[0].text : '';
+    const aiResponse = await generateAIResponse(systemPrompt, messages);
+
+    console.log('✅ AI API call successful');
+    console.log('🔍 Response ID:', aiResponse.id);
+    console.log('🔍 Response model:', aiResponse.model);
+    console.log('🔍 Response usage:', JSON.stringify(aiResponse.usage, null, 2));
+    console.log('🔍 Response content length:', aiResponse.content.length);
+    console.log('🔍 Response content:', aiResponse.content);
 
     console.log('📤 Sending response to client');
-    console.log('📋 Response length:', response.length);
-    console.log('📋 Response preview:', response.substring(0, 100) + '...');
-    console.log('📋 Full response object:', { response });
+    console.log('📋 Response preview:', aiResponse.content.substring(0, 100) + '...');
     
     try {
-      res.json({ response });
+      res.json({ response: aiResponse.content });
       console.log('✅ Response sent successfully to client');
     } catch (sendError) {
       console.error('❌ Error sending response to client:', sendError);
@@ -85,6 +70,7 @@ Remember: Be respectful, logical, and evidence-based. Keep it under 280 characte
     console.error('Error message:', error instanceof Error ? error.message : String(error));
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     console.error('Full error object:', JSON.stringify(error, null, 2));
+    
     res.status(500).json({ error: 'Failed to generate opening statement' });
   }
 };
@@ -93,6 +79,7 @@ export const generateDebateResponse = async (req: Request, res: Response) => {
   try {
     console.log('🎯 generateDebateResponse called');
     console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
+    console.log('🔧 CURRENT AI CONFIG:', AI_CONFIG);
     
     const { topic, aiSide, conversationHistory, userMessage } = req.body;
 
@@ -120,7 +107,7 @@ Debate Guidelines:
 - Be persuasive but fair`;
 
     // Build conversation history
-    const messages: ConversationMessage[] = [];
+    const messages: AIMessage[] = [];
 
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg: ConversationMessage) => {
@@ -137,32 +124,26 @@ Debate Guidelines:
       content: userMessage,
     });
 
-    console.log('🤖 Creating Anthropic client for debate response...');
-    const anthropic = getAnthropicClient();
-    console.log('📋 Using model:', MODEL);
-    console.log('🔑 API Key present:', !!process.env.ANTHROPIC_API_KEY);
-    
-    console.log('🚀 Making API call to Anthropic for debate response...');
-    const message = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: systemPrompt,
-      messages,
-    });
+    console.log('🚀 Making AI API call for debate response...');
+    console.log('📋 System prompt length:', systemPrompt.length);
+    console.log('📋 Messages count:', messages.length);
+    console.log('📋 User message being sent to AI:', userMessage);
+    console.log('📋 Full conversation history:', messages.map(msg => ({ role: msg.role, content: msg.content.substring(0, 100) + '...' })));
 
-    console.log('✅ API call successful for debate response');
-    console.log('🔍 ACTUAL MODEL USED BY API:', message.model);
-    console.log('🔍 Response ID:', message.id);
+    const aiResponse = await generateAIResponse(systemPrompt, messages);
 
-    const response = message.content[0].type === 'text' ? message.content[0].text : '';
+    console.log('✅ AI API call successful for debate response');
+    console.log('🔍 Response ID:', aiResponse.id);
+    console.log('🔍 Response model:', aiResponse.model);
+    console.log('🔍 Response usage:', JSON.stringify(aiResponse.usage, null, 2));
+    console.log('🔍 Response content length:', aiResponse.content.length);
+    console.log('🔍 Response content:', aiResponse.content);
 
     console.log('📤 Sending debate response to client');
-    console.log('📋 Response length:', response.length);
-    console.log('📋 Response preview:', response.substring(0, 100) + '...');
-    console.log('📋 Full response object:', { response });
+    console.log('📋 Response preview:', aiResponse.content.substring(0, 100) + '...');
     
     try {
-      res.json({ response });
+      res.json({ response: aiResponse.content });
       console.log('✅ Debate response sent successfully to client');
     } catch (sendError) {
       console.error('❌ Error sending debate response to client:', sendError);
@@ -174,6 +155,7 @@ Debate Guidelines:
     console.error('Error message:', error instanceof Error ? error.message : String(error));
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     console.error('Full error object:', JSON.stringify(error, null, 2));
+    
     res.status(500).json({ error: 'Failed to generate debate response' });
   }
 };
